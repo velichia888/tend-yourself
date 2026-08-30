@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+build/
+
+# iOS
+ios-app/*.xcodeproj/
+ios-app/DerivedData/
+ios-app/.build/
+*.ipa
+*.dSYM.zip
+*.dSYM

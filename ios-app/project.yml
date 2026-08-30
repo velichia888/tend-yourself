@@ -1,0 +1,66 @@
+name: Tend
+
+options:
+  minimumXcodeGenVersion: 2.38.0
+
+settings:
+  base:
+    PRODUCT_NAME: Tend
+    PRODUCT_BUNDLE_IDENTIFIER: com.tend.app
+    SWIFT_VERSION: 5.9
+    IPHONEOS_DEPLOYMENT_TARGET: 16.0
+    # iPhone only ("1"): the UI is portrait-only and not designed for
+    # iPad/landscape, so we don't declare iPad support at all rather
+    # than adding orientation support the app doesn't have.
+    TARGETED_DEVICE_FAMILY: "1"
+    # Manual, not Automatic: a future signed App Store/TestFlight
+    # workflow (mirroring myemptycloset's) relies on Codemagic's
+    # `xcode-project use-profiles` setting PROVISIONING_PROFILE_SPECIFIER
+    # / CODE_SIGN_IDENTITY explicitly — Automatic style ignores that and
+    # expects Xcode's own interactive Apple ID signing, unavailable on a
+    # CI machine. Set now so switching to a signed workflow later doesn't
+    # silently reintroduce that failure.
+    CODE_SIGN_STYLE: Manual
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+
+configs:
+  Debug: debug
+  Release: release
+
+targets:
+  Tend:
+    type: application
+    platform: iOS
+    sources:
+      - path: Tend
+    settings:
+      base:
+        PRODUCT_NAME: Tend
+        PRODUCT_BUNDLE_IDENTIFIER: com.tend.app
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Tend/App/Info.plist
+      configs:
+        # Debug only, not base — see myemptycloset's ios-app for why this
+        # can't live under `base` without breaking a future signed
+        # Release/TestFlight archive.
+        Debug:
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGN_IDENTITY: ""
+
+  TendTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ../TendTests
+    dependencies:
+      - target: Tend
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tend.app/Tend"

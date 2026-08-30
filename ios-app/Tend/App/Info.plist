@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	These five are normally auto-injected by Xcode when
+	GENERATE_INFOPLIST_FILE is YES. This project sets it to NO to use
+	this file completely unmanaged, which means nothing injects them —
+	without these, the simulator can't identify what binary to launch at
+	all ("Simulator device failed to launch") even though the app
+	otherwise builds successfully.
+	-->
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+
+	<key>CFBundleDisplayName</key>
+	<string>Tend</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+
+	<!--
+	Without this, every TestFlight build sits at "Missing Compliance"
+	until someone manually answers the export-encryption question in App
+	Store Connect. Tend has no network stack at all — no custom or
+	standard encryption beyond what iOS itself provides — so this
+	exemption applies cleanly.
+	-->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<!--
+	Even with TARGETED_DEVICE_FAMILY "1" (iPhone only), App Store Connect
+	still rejects a portrait-only upload with error 90474 unless this is
+	set, opting the app out of iPad windowed/multitasking resizing —
+	matching that it was never built for landscape or iPad.
+	-->
+	<key>UIRequiresFullScreen</key>
+	<true/>
+
+	<!--
+	No NSPhotoLibraryUsageDescription/NSCameraUsageDescription and no
+	NSAppTransportSecurity exception: Tend has no photo import and no
+	network calls at all (see docs/MVP_SCOPE.md), so neither applies.
+	-->
+</dict>
+</plist>
