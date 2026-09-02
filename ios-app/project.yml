@@ -56,7 +56,7 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: ../TendTests
+      - path: TendTests
     dependencies:
       - target: Tend
     settings:
