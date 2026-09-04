@@ -6,7 +6,7 @@ options:
 settings:
   base:
     PRODUCT_NAME: Tend
-    PRODUCT_BUNDLE_IDENTIFIER: com.tend.app
+    PRODUCT_BUNDLE_IDENTIFIER: com.tendyourself.app
     SWIFT_VERSION: 5.9
     IPHONEOS_DEPLOYMENT_TARGET: 16.0
     # iPhone only ("1"): the UI is portrait-only and not designed for
@@ -41,7 +41,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: Tend
-        PRODUCT_BUNDLE_IDENTIFIER: com.tend.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.tendyourself.app
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: Tend/App/Info.plist
       configs:
@@ -64,3 +64,29 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         BUNDLE_LOADER: "$(TEST_HOST)"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tend.app/Tend"
+
+schemes:
+  # Default scheme (unchanged in spirit) — used by ios-simulator and
+  # ios-device-unsigned, which build via `xcodebuild build` and override
+  # signing on the command line regardless of what's configured here.
+  Tend:
+    build:
+      targets:
+        Tend: [run, test, profile, analyze, archive]
+    run:
+      config: Debug
+    archive:
+      config: Release
+  # Archive-only scheme for the ios-appstore workflow. GatherProvisioningInputs
+  # validates signing for every action present in a scheme — including
+  # Run/Test/Profile, which conventionally need a Development
+  # certificate — not just the action actually being invoked. A scheme
+  # containing only the archive action has nothing else for
+  # GatherProvisioningInputs to resolve. (Same pattern as
+  # myemptycloset's ios-app/project.yml.)
+  Tend-Release:
+    build:
+      targets:
+        Tend: [archive]
+    archive:
+      config: Release
