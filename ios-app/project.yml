@@ -13,14 +13,18 @@ settings:
     # iPad/landscape, so we don't declare iPad support at all rather
     # than adding orientation support the app doesn't have.
     TARGETED_DEVICE_FAMILY: "1"
-    # Manual, not Automatic: a future signed App Store/TestFlight
-    # workflow (mirroring myemptycloset's) relies on Codemagic's
-    # `xcode-project use-profiles` setting PROVISIONING_PROFILE_SPECIFIER
-    # / CODE_SIGN_IDENTITY explicitly — Automatic style ignores that and
-    # expects Xcode's own interactive Apple ID signing, unavailable on a
-    # CI machine. Set now so switching to a signed workflow later doesn't
-    # silently reintroduce that failure.
-    CODE_SIGN_STYLE: Manual
+    # Automatic + DEVELOPMENT_TEAM, paired with xcodebuild's own
+    # -allowProvisioningUpdates/-authenticationKey* flags in the
+    # ios-appstore workflow: Xcode talks to App Store Connect directly
+    # with the API key to fetch/create whatever cert+profile it needs at
+    # archive time, with no local keychain/.p12 juggling at all. (Manual
+    # signing via Codemagic's fetch-signing-files/keychain
+    # add-certificates/use-profiles pipeline hit a wall on myemptycloset's
+    # identical setup: the certificate's .p12 consistently failed
+    # "SecKeychainItemImport: Unable to decode the provided data" on
+    # import regardless of which openssl produced it.)
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 4357L599UW
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     MARKETING_VERSION: 0.1.0
     CURRENT_PROJECT_VERSION: 1
@@ -44,13 +48,16 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.tendyourself.app
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: Tend/App/Info.plist
-      configs:
-        # Debug only, not base — see myemptycloset's ios-app for why this
-        # can't live under `base` without breaking a future signed
-        # Release/TestFlight archive.
-        Debug:
-          CODE_SIGNING_ALLOWED: NO
-          CODE_SIGN_IDENTITY: ""
+      # No per-config CODE_SIGNING_ALLOWED/CODE_SIGN_IDENTITY overrides
+      # here — on myemptycloset's identical setup these caused
+      # GatherProvisioningInputs to see conflicting/incomplete signing
+      # requirements across the scheme's actions during `xcodebuild
+      # archive -allowProvisioningUpdates`. The ios-simulator and
+      # ios-device-unsigned workflows already force-disable signing via
+      # their own explicit xcodebuild command-line flags
+      # (CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+      # CODE_SIGNING_ALLOWED=NO), so no project-level Debug override is
+      # needed for them to keep working.
 
   TendTests:
     type: bundle.unit-test
