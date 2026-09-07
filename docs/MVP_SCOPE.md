@@ -1,80 +1,93 @@
-# Tend — MVP Scope
+# Tend Yourself — Scope (v2)
 
-Tend is a daily water-intake habit tracker. Log real water you drink; a
-flower grows over the course of the day as a direct, deterministic
-reflection of how close you are to your goal. Tend to your tasks, tend to
-yourself, tend to your garden.
+Tend Yourself is a self-care companion: water intake, meditation, daily
+tasks, medication tracking, a private journal, and mental-health
+resources, in one place. "Small steps, brighter days" — every visual
+(a growing flower, a completed checklist) is a direct, transparent
+reflection of real data the user entered, never a fabricated or
+decorative stand-in for it.
 
-## Architecture decision: local-only, no backend
+v1 was a single-purpose water tracker (see `GROWTH.md` for the growth
+formula it still uses unchanged). v2 keeps that architecture decision
+and its reasoning intact — local-only, no accounts, no backend — and
+extends the same pattern across five more feature domains rather than
+introducing a different one for each.
 
-Every other app built this session (myemptycloset, Car Hopping) started
-with a real Node/Express/Prisma backend and real auth, verified via curl
-before any iOS code was written. Tend deliberately breaks that pattern:
+## Architecture decision: still local-only, no backend
 
-**Tend has no backend, no auth, and no network calls in v1.** All data
-(water log entries, daily goal) is stored locally on-device as JSON.
+**Tend has no accounts, no backend, and no network calls.** All data —
+water log, tasks, medications, journal entries, support plan — is
+stored locally on-device as JSON, one file per domain, following the
+same `WaterLogStore` pattern v1 established.
 
-Reasoning:
-- This is a single-user personal habit tracker, not a marketplace. There
-  is no second party to transact with, message, or browse listings from
-  — the entire feature set (log water, watch a flower grow, see a
-  streak) is meaningful for exactly one person on exactly one device.
-- Real auth/backend would add real engineering cost (deployment, a
-  database, session handling) with no corresponding feature benefit for
-  v1. It would be complexity for its own sake, which the design
-  principle applied throughout this session explicitly warns against.
-- Health/habit data arguably belongs on-device by default; local-only
-  is the more privacy-respecting default, not just the cheaper one.
-- The "real, not fabricated" rule that governs every other app's
-  gimmick mechanic (Car Hopping's rarity score, its pack-opening
-  endpoint) is about the *data* being real and the *computation* being
-  transparent and deterministic — not about where the computation runs.
-  A local, deterministic function over real on-device logged entries
-  satisfies that rule exactly as well as a server-side one would.
+This was re-examined, not just carried over, when v2's scope grew to
+include real health-adjacent data (medication schedules, mood/journal
+entries): the reasoning still holds. There's no second party to sync
+with, health/journal data arguably belongs on-device by default, and a
+real backend would add real engineering cost with no feature benefit
+today. If multi-device sync or account recovery is ever wanted, that's
+when a backend earns its keep — not before.
 
-If a future version adds multi-device sync or account recovery, that's
-exactly when a real backend earns its keep — not before.
+## Tab structure
 
-## What's real in v1
+Five tabs: **Home, Meditate, Tasks, Journal, You**. Water/Garden,
+Medication, and Resources are deliberately not tabs — they're reached
+from Home's glance row / Today's plan list, and from Hard Day Mode —
+keeping the tab bar from being crowded as the feature set grew.
 
-- **Water logging**: user logs an amount (ml) at a timestamp. Stored as
-  a plain array of entries in a local JSON file (`WaterLogStore`).
-- **Daily goal**: a real, user-editable target in ml (default 2000ml),
-  stored in `UserDefaults`.
-- **Growth stage**: a pure, deterministic function of
-  (today's logged total ÷ today's goal) — see `docs/GROWTH.md`. Never
-  randomized, never client-side-only decoration disconnected from real
-  data.
-- **Garden / streak**: a day "qualifies" (plants a permanent flower in
-  the garden) only when its real logged total reaches 100% of goal.
-  Current streak and longest streak are computed from real qualifying
-  days, not fabricated or seeded with fake history.
+## What's real
 
-## What's explicitly NOT in v1 (and why)
+- **Water, growth, and garden** — unchanged from v1. See `GROWTH.md`.
+  Now reached from Home rather than being its own tab.
+- **Tasks** — real recurring routines (`TaskEngine.rollForward`
+  materializes today's instance of a daily task; it never backfills
+  missed days, so a gap never builds an overwhelming backlog).
+- **Medication** — real schedule, real Taken/Later/Skip status per
+  dose, real refill tracking. Tend only records what the user tells
+  it — it never infers, suggests, or second-guesses a dose (see the
+  `MedicationCopy.disclosure` string, shown wherever medication status
+  appears).
+- **Journal** — real mood/energy/sleep entries, gated behind Face ID,
+  Touch ID, or the device passcode (never biometrics-only — a device
+  with no passcode at all falls through to unlocked-with-a-banner
+  rather than a permanent lock-out).
+- **Notifications** — real, per-category local reminders (water,
+  medication, refill, tasks, meditation, daily check-in), each
+  independently toggleable. A "Later" on a medication dose only ever
+  changes that dose's status; it does not silently pretend to schedule
+  a reminder that doesn't exist.
+- **Hard Day Mode** — a simplified checklist wired to the same real
+  stores as everywhere else (checking "drink water" there calls the
+  same `WaterLogStore.logWater` Home and Water do) — not a separate,
+  disconnected set of fake progress.
 
-- **No accounts, no sign-in, no multi-device sync** — see architecture
-  decision above.
-- **No push notifications / reminders** — a reminder toggle that
-  doesn't actually schedule anything is exactly the kind of fake
-  feature this session's apps have deliberately avoided. Real local
-  notification scheduling is a real feature; it's just not v1.
-- **No fake points/currency, no leaderboards, no social feed** — there's
-  no second user for a leaderboard to compare against, and no real
-  spend mechanic for a points currency to back.
-- **No health or medical claims.** Tend is a hydration habit tracker,
-  not a medical device. It never diagnoses, never gives medical
-  hydration advice, and the goal is just a number the user sets for
-  themselves.
-- **No custom illustrated flower art / app icon yet** — v1 uses a
-  simple hand-drawn vector flower mark (`FlowerMark.swift`, scales with
-  bloom progress) and SF Symbols, matching how Car Hopping's first pass
-  shipped with placeholder visuals before a real design pass.
+## What's explicitly NOT in v1 of this expansion (and why)
+
+- **No accounts, no sign-in, no multi-device sync** — see above.
+- **No fake points/currency, no leveling, no leaderboards.** The
+  garden/streak mechanic is motivational, never competitive, and never
+  punishes a missed day — see `GROWTH.md`'s disclosure text.
+- **No background-audio meditation timer.** The timer is foreground-
+  only (auto-pauses when the app backgrounds) — a real
+  background-continuing, `AVAudioSession`-backed timer is a materially
+  bigger feature than a foreground countdown and was deliberately
+  descoped rather than half-built.
+- **No health or medical claims, ever.** Medication tracking is a
+  record-keeping tool, not a clinical one. Resources are supportive/
+  educational content, not diagnosis or treatment — the one exception
+  is the always-visible, non-alarmist crisis card (call/text 988),
+  which stays present without making every ordinary low mood feel like
+  a crisis.
+- **No onboarding flow yet.** Every store just starts empty; there's no
+  guided first-run setup (name, feature selection, goals) yet.
+- **No data export.** "Clear All Data" (Face ID/passcode-gated, since
+  it can destroy journal entries) is the only bulk data control today.
+- **No custom illustrated app icon yet** for the v2 branding — the
+  existing v1 flower+droplet icon is still in place pending a real
+  asset pass.
 
 ## Known v1 simplification (documented, not hidden)
 
-Changing the daily goal changes how *past* days are evaluated too —
-there's no per-day historical goal snapshot. If you raise your goal
-today, a previously-"bloomed" day could stop qualifying when
-recomputed. This keeps the data model simple (one current goal, not a
-goal-history table) at the cost of retroactively reinterpreting old
-days. Worth revisiting if it turns out to feel unfair in practice.
+Changing the daily water goal changes how *past* days are evaluated
+too — there's no per-day historical goal snapshot. This is unchanged
+from v1; see `GROWTH.md` for the full explanation.

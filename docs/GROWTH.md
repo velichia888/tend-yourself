@@ -48,11 +48,17 @@ displayed — never stored as a separate, driftable counter.
 
 ## Disclosure
 
-Tend's Home screen carries a persistent line, matching the transparency
-requirement every gimmick mechanic in this session's apps has had:
+Tend's Water screen (formerly its own Home tab — see `MVP_SCOPE.md` for
+v2's Home/Meditate/Tasks/Journal/You tab structure; Water is now
+reached from Home's glance row) carries a persistent line, matching the
+transparency requirement every gimmick mechanic in this app has had:
 
 > "Your flower grows from water you actually log — no points, no
 > shortcuts. Missing a day just means a fresh seed tomorrow."
+
+This formula and this disclosure are unchanged by the v2 rebuild — only
+where the screen lives in the navigation changed, not what it computes
+or claims.
 
 ## Known simplification
 

@@ -1,45 +1,93 @@
-# Tend — Development Plan
+# Tend Yourself — Development Plan
 
-1. Docs (this pass): `ARCHITECTURE.md`, `MVP_SCOPE.md`, `GROWTH.md`,
-   `DEVELOPMENT_PLAN.md` — done.
-2. Models + pure engines: `WaterLogEntry`, `GrowthStage`,
-   `GrowthEngine`, `GardenEngine`. Unit-testable with no I/O.
-3. `GrowthEngineTests.swift` — boundary cases per stage, streak/longest
-   streak cases, mirroring `rarity.test.ts`'s style. Written now; not
-   yet executed (no local Xcode on this machine — same constraint every
-   other iOS target in this session has had. Real feedback comes from
-   the first Codemagic `ios-simulator` run).
-4. `WaterLogStore` — local JSON persistence + daily goal in
-   `UserDefaults`.
-5. Shared UI: `Theme.swift`, `FlowerMark` (vector shape), `FlowerView`.
-6. Features: Home (log water, see today's flower + streak), Garden
-   (calendar grid of qualifying days), Settings (edit goal, clear
-   data), Root/MainTabView.
-7. `project.yml` + hand-written `Info.plist`, mirroring the exact
-   hard-won settings from myemptycloset/Car Hopping.
-8. `codemagic.yaml`: `ios-simulator` (XcodeGen → build → boot sim →
-   launch → wait for `IOS_TEST_APP_LAUNCHED` → screenshot) and
-   `ios-device-unsigned` (unsigned .ipa for Sideloadly), same proven
-   shape as the other two apps' configs, simplified since there's no
-   backend to pre-warm and no login to wait on.
-9. Self-review every Swift file against the known iOS16/SwiftUI
-   pitfalls list before calling it done (see `ARCHITECTURE.md`).
+## v1 (water tracker) — done
+
+See git history before the v2 rebuild commit for the original 9-step
+plan. `GrowthEngine`/`GardenEngine` and their tests are unchanged by
+v2; the rest of v1's Home/Garden/Settings screens were reskinned or
+relocated rather than rebuilt from scratch (Water/Garden moved under
+`Features/Water/`, Settings became `Features/You/YouView.swift`).
+
+## v2 (self-care companion rebuild) — done in this pass
+
+Real product scope, driven by a set of ChatGPT-generated UI mockups
+("Small Steps, Brighter Days" cream/forest-green botanical style — see
+`MVP_SCOPE.md`), treated as visual references rather than exact specs:
+generated-image inconsistencies (fake dates, a tab bar that disagreed
+with itself across different mockup images, an account+XP progression
+system that contradicted this app's existing no-fake-progress
+philosophy) were resolved against the canonical architecture rather
+than reproduced literally.
+
+Build order actually followed:
+
+1. Design system: `Theme.swift` re-toned to cream/forest-green;
+   `FeatureCategory.swift` (the category-color system); botanical
+   `Shape`s (`LeafSprigMark`, `VineDividerMark`, `BotanicalFrame`),
+   hand-vectored like `FlowerMark` rather than image assets;
+   `IconBadge`/`IconBadgeCard` (the one reusable row component); a
+   bundled Caveat script font (`Theme.Font.script`) alongside a
+   system-serif `Theme.Font.display`.
+2. Models + pure engines + tests, mirroring `GrowthEngine`/
+   `GardenEngine`'s style: `TaskItem`/`TaskEngine` (recurrence
+   expansion that never backfills missed days), `Medication`/
+   `MedicationLogEntry`/`MedicationEngine` (dose expansion, refill
+   check). `JournalEntry`, `MeditationSession`, `ResourceCategory`,
+   `SupportContact`/`SupportPlan` needed no separate engine — just
+   date filtering or static content.
+3. Stores, one per domain, all following `WaterLogStore`'s JSON-in-
+   Documents (+ UserDefaults for settings) pattern: `TaskStore`,
+   `MedicationStore`, `JournalStore`, `SupportPlanStore`.
+   `MeditationPreferencesStore`/`NotificationPreferencesStore` are
+   UserDefaults-only, a deliberate exception since neither has a
+   growing log to persist.
+4. `BiometricAuthService` (Face ID/Touch ID/passcode via
+   `.deviceOwnerAuthentication`, falling through to
+   unlocked-with-a-banner if no passcode exists) + `JournalGateView`.
+5. `NotificationService` (thin `UNUserNotificationCenter` wrapper) +
+   `NotificationPreferencesStore` (per-category toggles/times) +
+   `NotificationCoordinator` (Combine-driven sync from stores/prefs to
+   scheduled notifications) — added mid-build after the user
+   reprioritized real notification scheduling into this same pass
+   rather than a follow-up.
+6. Feature screens: Water/Garden reskin → Home (aggregates Tasks +
+   Medication into one chronological "Today's plan", mood check-in,
+   glance row, Hard Day Mode entry) → Tasks → Medication → Resources
+   (crisis card, My Support Plan) → Hard Day Mode (wired to the real
+   stores) → Meditate (foreground-only timer) → Journal → You (renamed
+   from Settings; notification settings, Face ID toggle, Face
+   ID-gated "Clear All Data" covering every store).
+7. Navigation: real 5-tab `MainTabView` (Home, Meditate, Tasks,
+   Journal, You); `RootView` extended with a DEBUG-only deep-screen
+   presenter for the screens that are no longer tabs.
+8. CI automation extension: `IOS_TEST_INITIAL_TAB` now covers 5 tabs;
+   new `IOS_TEST_DEEP_SCREEN` and `IOS_TEST_SKIP_FACEID` env vars;
+   `codemagic.yaml`'s `capture_tab`/`capture_deep_screen` produce 10
+   screenshots per build.
+9. Docs rewrite (this pass): `ARCHITECTURE.md`, `MVP_SCOPE.md`,
+   `GROWTH.md` (relocation note only — formula unchanged),
+   `DEVELOPMENT_PLAN.md`.
+
+Verified via a real Codemagic `ios-simulator` run (no local Xcode on
+this machine) rather than just a self-review pass — same constraint
+v1 had, resolved the same way.
 
 ## Explicitly stopped short of, pending user go-ahead
 
-- No GitHub repo created, no push.
-- No Codemagic build triggered.
-- No Render/backend deployment (there is no backend).
-- No real app icon / illustrated flower art — placeholder vector mark
-  and SF Symbols only.
-- No push notifications — real local notification scheduling is a
-  legitimate future feature, just not built now (see `MVP_SCOPE.md`).
+- No onboarding flow (name/nickname, feature selection, goals).
+- No data export — "Clear All Data" (reset) exists; export doesn't yet.
+- No new app icon for the v2 branding — v1's flower+droplet icon is
+  still in place.
+- No background-audio meditation timer — foreground-only, deliberately
+  descoped rather than half-built (see `MVP_SCOPE.md`).
 
 ## Deferred to a later phase
 
-- Optional real backend + auth, only if/when multi-device sync or
-  account recovery is actually wanted.
-- Local notification reminders (real scheduling, not a fake toggle).
-- Illustrated flower/garden art once the user provides real design
-  mockups, the same way myemptycloset and Car Hopping got a visual
-  pass after their first working builds.
+- Onboarding + data export, once prioritized.
+- A real illustrated app icon and any further illustration pass beyond
+  the hand-vectored botanical Shapes already in place.
+- Background-continuing meditation audio, if ever wanted.
+- Deeper garden progression / analytics — the user's own instruction
+  for this pass was to prioritize Home/Tasks/Water/Medication/
+  Meditation/Journal/Resources/Hard-Day-Mode/notifications/persistence
+  first and treat garden depth and analytics as follow-ups.
