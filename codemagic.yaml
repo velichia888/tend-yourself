@@ -278,6 +278,22 @@ workflows:
 
       - name: Archive
         script: |
+          # Diagnostic: the exported .ipa's Info.plist has repeatedly
+          # shown UIDeviceFamily = [1, 2] despite project.yml declaring
+          # TARGETED_DEVICE_FAMILY: "1" and Info.plist itself also
+          # explicitly declaring UIDeviceFamily = [1] -- both apparently
+          # overridden during the build. Print the setting actually
+          # resolved for this exact scheme/config so we can see whether
+          # XcodeGen wrote "1" into the generated project at all, or
+          # something downstream is overriding it.
+          echo "--- TARGETED_DEVICE_FAMILY as resolved by xcodebuild ---"
+          xcodebuild -showBuildSettings \
+            -project Tend.xcodeproj \
+            -scheme Tend-Release \
+            -configuration Release \
+            | grep -i "TARGETED_DEVICE_FAMILY\|SUPPORTED_PLATFORMS\|SDKROOT" || true
+          echo "--- end diagnostic ---"
+
           xcodebuild \
             -project Tend.xcodeproj \
             -scheme Tend-Release \
@@ -289,6 +305,10 @@ workflows:
             -authenticationKeyPath "$AUTH_KEY_PATH" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+
+          echo "--- UIDeviceFamily in the archived .app's compiled Info.plist ---"
+          /usr/libexec/PlistBuddy -c "Print :UIDeviceFamily" \
+            "$CM_BUILD_DIR/build/Tend.xcarchive/Products/Applications/Tend.app/Info.plist" || true
 
       - name: Export ipa
         script: |
