@@ -6,30 +6,28 @@ struct GardenView: View {
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-                    Text(monthTitle)
-                        .font(Theme.Font.headline(20))
-                        .foregroundStyle(Theme.ink)
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                Text(monthTitle)
+                    .font(Theme.Font.headline(20))
+                    .foregroundStyle(Theme.ink)
 
-                    LazyVGrid(columns: columns, spacing: Theme.Spacing.sm) {
-                        ForEach(daysInMonth, id: \.self) { day in
-                            dayCell(for: day)
-                        }
+                LazyVGrid(columns: columns, spacing: Theme.Spacing.sm) {
+                    ForEach(daysInMonth, id: \.self) { day in
+                        dayCell(for: day)
                     }
-                    .padding(Theme.Spacing.md)
-                    .cardStyle()
-
-                    Text("\(store.qualifyingDays.count) day\(store.qualifyingDays.count == 1 ? "" : "s") bloomed all-time \u{2022} longest streak \(store.longestStreak)")
-                        .font(Theme.Font.body(13))
-                        .foregroundStyle(Theme.inkSoft)
                 }
                 .padding(Theme.Spacing.md)
+                .cardStyle()
+
+                Text("\(store.qualifyingDays.count) day\(store.qualifyingDays.count == 1 ? "" : "s") bloomed all-time \u{2022} longest streak \(store.longestStreak)")
+                    .font(Theme.Font.body(13))
+                    .foregroundStyle(Theme.inkSoft)
             }
-            .background(Theme.canvas.ignoresSafeArea())
-            .navigationTitle("Garden")
+            .padding(Theme.Spacing.md)
         }
+        .background(Theme.canvas.ignoresSafeArea())
+        .navigationTitle("Garden")
     }
 
     private var monthTitle: String {
@@ -74,5 +72,7 @@ struct GardenView: View {
 }
 
 #Preview {
-    GardenView().environmentObject(WaterLogStore())
+    NavigationStack {
+        GardenView().environmentObject(WaterLogStore())
+    }
 }

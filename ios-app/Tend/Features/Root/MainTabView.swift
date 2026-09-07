@@ -6,16 +6,24 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selection) {
             HomeView()
-                .tabItem { Label("Home", systemImage: "drop.fill") }
+                .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
-            GardenView()
-                .tabItem { Label("Garden", systemImage: "leaf.fill") }
+            MeditateView()
+                .tabItem { Label("Meditate", systemImage: "wind") }
                 .tag(1)
 
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+            TasksView()
+                .tabItem { Label("Tasks", systemImage: "checkmark.circle.fill") }
                 .tag(2)
+
+            JournalGateView()
+                .tabItem { Label("Journal", systemImage: "book.fill") }
+                .tag(3)
+
+            YouView()
+                .tabItem { Label("You", systemImage: "person.fill") }
+                .tag(4)
         }
         .onAppear {
             // CI screenshot automation only — see codemagic.yaml's
@@ -30,8 +38,4 @@ struct MainTabView: View {
             #endif
         }
     }
-}
-
-#Preview {
-    MainTabView().environmentObject(WaterLogStore())
 }

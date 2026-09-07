@@ -61,22 +61,19 @@ workflows:
 
           mkdir -p "$CM_BUILD_DIR/simulator-artifacts"
 
-          # One launch per tab, for App Store review screenshots. Data
-          # seeded on the first (Home) launch persists in the app's
-          # Documents dir across the later relaunches on the same
-          # simulator/install, so Garden and Settings show it too
-          # without re-seeding.
-          capture_tab() {
-            local tab_index="$1"
-            local screenshot_name="$2"
-            local seed="$3"
+          # One launch per tab (or non-tab "deep screen"), for App Store
+          # review screenshots. Data seeded on the first (Home) launch
+          # persists in the app's Documents dir across the later
+          # relaunches on the same simulator/install, so nothing else
+          # needs to re-seed. SIMCTL_CHILD_IOS_TEST_SKIP_FACEID is set
+          # unconditionally on every launch, tab or deep-screen alike —
+          # an unhandled Face ID prompt on this unattended simulator
+          # would hang the whole workflow until timeout, not just fail
+          # one screenshot, so this can't be limited to just Journal's
+          # capture call.
+          await_launch_and_screenshot() {
+            local screenshot_name="$1"
             local LOGFILE="$CM_BUILD_DIR/simulator-artifacts/app-console-${screenshot_name}.log"
-
-            SIMCTL_CHILD_IOS_TEST_AUTOMATION="1" \
-              SIMCTL_CHILD_IOS_TEST_INITIAL_TAB="$tab_index" \
-              SIMCTL_CHILD_IOS_TEST_SEED_DATA="$seed" \
-              xcrun simctl launch --console-pty "$DEVICE_ID" com.tendyourself.app \
-                > "$LOGFILE" 2>&1 &
             local launch_pid=$!
 
             local waited=0
@@ -84,7 +81,7 @@ workflows:
               sleep 1
               waited=$((waited + 1))
               if [ "$waited" -ge 45 ]; then
-                echo "Timed out waiting for IOS_TEST_APP_LAUNCHED after ${waited}s (tab $tab_index)"
+                echo "Timed out waiting for IOS_TEST_APP_LAUNCHED after ${waited}s ($screenshot_name)"
                 break
               fi
             done
@@ -101,9 +98,48 @@ workflows:
             cat "$LOGFILE" || true
           }
 
+          capture_tab() {
+            local tab_index="$1"
+            local screenshot_name="$2"
+            local seed="$3"
+            local LOGFILE="$CM_BUILD_DIR/simulator-artifacts/app-console-${screenshot_name}.log"
+
+            SIMCTL_CHILD_IOS_TEST_AUTOMATION="1" \
+              SIMCTL_CHILD_IOS_TEST_SKIP_FACEID="1" \
+              SIMCTL_CHILD_IOS_TEST_INITIAL_TAB="$tab_index" \
+              SIMCTL_CHILD_IOS_TEST_SEED_DATA="$seed" \
+              xcrun simctl launch --console-pty "$DEVICE_ID" com.tendyourself.app \
+                > "$LOGFILE" 2>&1 &
+
+            await_launch_and_screenshot "$screenshot_name"
+          }
+
+          capture_deep_screen() {
+            local screen_name="$1"
+            local screenshot_name="$2"
+            local LOGFILE="$CM_BUILD_DIR/simulator-artifacts/app-console-${screenshot_name}.log"
+
+            SIMCTL_CHILD_IOS_TEST_AUTOMATION="1" \
+              SIMCTL_CHILD_IOS_TEST_SKIP_FACEID="1" \
+              SIMCTL_CHILD_IOS_TEST_DEEP_SCREEN="$screen_name" \
+              SIMCTL_CHILD_IOS_TEST_SEED_DATA="0" \
+              xcrun simctl launch --console-pty "$DEVICE_ID" com.tendyourself.app \
+                > "$LOGFILE" 2>&1 &
+
+            await_launch_and_screenshot "$screenshot_name"
+          }
+
           capture_tab 0 tend-home 1
-          capture_tab 1 tend-garden 0
-          capture_tab 2 tend-settings 0
+          capture_tab 1 tend-meditate 0
+          capture_tab 2 tend-tasks 0
+          capture_tab 3 tend-journal 0
+          capture_tab 4 tend-you 0
+
+          capture_deep_screen medication tend-medication
+          capture_deep_screen resources tend-resources
+          capture_deep_screen water tend-water
+          capture_deep_screen garden tend-garden
+          capture_deep_screen hardDayMode tend-harddaymode
 
     artifacts:
       - $CM_BUILD_DIR/derived-data/Build/Products/Debug-iphonesimulator/Tend.app

@@ -1,29 +1,29 @@
 import SwiftUI
 
-/// Tend's visual direction: calm, soil-and-garden toned. First,
-/// functional pass — system-rounded fonts, a hand-drawn vector flower
-/// mark, no bundled illustration assets. A fuller illustrated pass comes
-/// later, the same way myemptycloset and Car Hopping got one after their
-/// first working builds.
+/// Tend's visual direction: "Small Steps, Brighter Days" — a cream,
+/// botanical, hand-illustrated self-care aesthetic (see the ChatGPT
+/// mockup set that drove the v2 rebuild). Vector shapes and system fonts
+/// throughout — no bundled illustration image assets — following the
+/// same hand-drawn-Shape precedent FlowerMark established for v1.
 enum Theme {
     // MARK: Colors
 
-    static let ink = Color(red: 0.2039, green: 0.1804, blue: 0.1333)        // #342E22 warm soil brown text
-    static let inkSoft = Color(red: 0.4706, green: 0.4392, blue: 0.3765)   // #78705F secondary text
-    static let inkFaint = Color(red: 0.698, green: 0.6706, blue: 0.6118)   // #B2AB9C tertiary/placeholder text
+    static let ink = Color(red: 0.1098, green: 0.2196, blue: 0.1725)        // #1C3832 deep forest green text
+    static let inkSoft = Color(red: 0.349, green: 0.4392, blue: 0.3843)   // #59706E secondary text
+    static let inkFaint = Color(red: 0.5843, green: 0.6549, blue: 0.6118) // #95A79C tertiary/placeholder text
 
-    static let surface = Color(red: 0.9922, green: 0.9843, blue: 0.9647)   // #FDFBF6 card white
-    static let canvas = Color(red: 0.9569, green: 0.9412, blue: 0.898)     // #F4F0E5 warm parchment background
-    static let canvasSoft = Color(red: 0.902, green: 0.8745, blue: 0.7961) // #E6DFCB secondary block wash
+    static let surface = Color(red: 1.0, green: 0.9922, blue: 0.9765)      // #FFFDF9 card white
+    static let canvas = Color(red: 0.9843, green: 0.9647, blue: 0.9294)    // #FBF6ED cream background
+    static let canvasSoft = Color(red: 0.9569, green: 0.9255, blue: 0.851) // #F4ECD9 secondary block wash
 
-    static let borderSubtle = Color(red: 0.8235, green: 0.7882, blue: 0.698) // #D2C9B2
+    static let borderSubtle = Color(red: 0.8706, green: 0.8314, blue: 0.7529) // #DED4C0
 
     /// The one bright accent for primary actions and active states.
-    static let accent = Color(red: 0.2588, green: 0.5451, blue: 0.3608)    // #428B5C garden green
-    static let accentSoft = Color(red: 0.7529, green: 0.8706, blue: 0.7451) // #C0DEBE
+    static let accent = Color(red: 0.1608, green: 0.4157, blue: 0.298)     // #29694C forest green
+    static let accentSoft = Color(red: 0.7686, green: 0.8784, blue: 0.7961) // #C4E0CB
 
     static let primaryGradient = LinearGradient(
-        colors: [Color(red: 0.4157, green: 0.6706, blue: 0.4784), accent],
+        colors: [Color(red: 0.298, green: 0.5451, blue: 0.4157), accent],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -72,6 +72,24 @@ enum Theme {
 
         static func body(_ size: CGFloat = 16) -> SwiftUI.Font {
             .system(size: size, weight: .regular, design: .default)
+        }
+
+        /// Large serif display headings ("Tasks", "Meditation", ...).
+        /// System serif design, not a bundled font — gets most of the
+        /// mockups' editorial-serif look with zero font-asset risk.
+        static func display(_ size: CGFloat) -> SwiftUI.Font {
+            .system(size: size, weight: .semibold, design: .serif)
+        }
+
+        /// Hand-written accent captions (e.g. "Progress still counts.").
+        /// The one bundled font in the project — Caveat, OFL-licensed,
+        /// registered via Info.plist's UIAppFonts (Tend/Resources/Fonts,
+        /// PostScript name confirmed as "Caveat-Regular"). If the font
+        /// ever fails to register, iOS silently substitutes the system
+        /// font at this size/weight rather than crashing — verify
+        /// visually after any Info.plist or resource-path change.
+        static func script(_ size: CGFloat) -> SwiftUI.Font {
+            .custom("Caveat-Regular", size: size, relativeTo: .body)
         }
     }
 }

@@ -59,5 +59,18 @@
 	NSAppTransportSecurity exception: Tend has no photo import and no
 	network calls at all (see docs/MVP_SCOPE.md), so neither applies.
 	-->
+
+	<key>NSFaceIDUsageDescription</key>
+	<string>Tend uses Face ID to keep your journal entries private.</string>
+
+	<!--
+	XcodeGen's default (group, not folder-reference) source handling
+	flattens Tend/Resources/Fonts/ into the bundle root at build time, so
+	this is just the filename, not the repo-relative path.
+	-->
+	<key>UIAppFonts</key>
+	<array>
+		<string>Caveat-Regular.ttf</string>
+	</array>
 </dict>
 </plist>
