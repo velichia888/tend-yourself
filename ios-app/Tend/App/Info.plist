@@ -55,6 +55,22 @@
 	<true/>
 
 	<!--
+	GENERATE_INFOPLIST_FILE: NO means Xcode never auto-translates
+	project.yml's TARGETED_DEVICE_FAMILY build setting into this key —
+	that translation only happens for an Xcode-generated Info.plist.
+	Without this explicit key, the compiled binary silently reports
+	"Device Family: iPhone, iPad" to App Store Connect regardless of
+	TARGETED_DEVICE_FAMILY, which is why Build 1 (uploaded before this
+	was added) triggered Apple's "You must upload a screenshot for
+	13-inch iPad displays" requirement despite the app never having
+	been designed for iPad. 1 = iPhone only.
+	-->
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+	</array>
+
+	<!--
 	No NSPhotoLibraryUsageDescription/NSCameraUsageDescription and no
 	NSAppTransportSecurity exception: Tend has no photo import and no
 	network calls at all (see docs/MVP_SCOPE.md), so neither applies.
