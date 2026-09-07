@@ -320,4 +320,11 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        # Was true, but auto-submitting to *external* TestFlight beta
+        # review needs Beta App Review contact info (name/phone/email)
+        # that's never been filled in — every build's post-processing
+        # step failed on that alone, even though the build itself
+        # uploaded and processed fine and was already usable/attachable
+        # to an App Store version submission without it. That's the only
+        # thing this project actually needs from this publishing step.
+        submit_to_testflight: false
