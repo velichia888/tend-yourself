@@ -222,6 +222,11 @@ workflows:
         script: |
           xcodegen generate --spec project.yml
 
+          echo "--- raw TARGETED_DEVICE_FAMILY as written into project.pbxproj ---"
+          grep -n "TARGETED_DEVICE_FAMILY" Tend.xcodeproj/project.pbxproj || echo "(no match at all)"
+          echo "--- checking for a shell env var that could override it ---"
+          env | grep -i "DEVICE_FAMILY" || echo "(none set)"
+
       - name: Locate App Store Connect auth key
         script: |
           # Bypass Codemagic's manual signing pipeline entirely
