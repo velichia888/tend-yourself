@@ -48,6 +48,17 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.tendyourself.app
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: Tend/App/Info.plist
+        # XcodeGen writes its own default of "1,2" (universal) directly
+        # into this target's build settings for an `application` type
+        # target, and an explicit target-level setting always wins over
+        # the project-level TARGETED_DEVICE_FAMILY above in real Xcode
+        # precedence — so declaring it only at the top level (as this
+        # project did before) silently gets shadowed here. Confirmed via
+        # `grep TARGETED_DEVICE_FAMILY project.pbxproj` on a real CI
+        # build: the project-level entries said "1" but every
+        # target-level entry said "1,2", and the shipped binary's
+        # compiled Info.plist matched the target-level (wrong) value.
+        TARGETED_DEVICE_FAMILY: "1"
       # No per-config CODE_SIGNING_ALLOWED/CODE_SIGN_IDENTITY overrides
       # here — on myemptycloset's identical setup these caused
       # GatherProvisioningInputs to see conflicting/incomplete signing
