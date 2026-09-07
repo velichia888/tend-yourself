@@ -60,31 +60,50 @@ workflows:
           xcrun simctl install "$DEVICE_ID" "$APP_PATH"
 
           mkdir -p "$CM_BUILD_DIR/simulator-artifacts"
-          LOGFILE="$CM_BUILD_DIR/simulator-artifacts/app-console.log"
 
-          SIMCTL_CHILD_IOS_TEST_AUTOMATION="1" \
-            xcrun simctl launch --console-pty "$DEVICE_ID" com.tendyourself.app \
-              > "$LOGFILE" 2>&1 &
-          LAUNCH_PID=$!
+          # One launch per tab, for App Store review screenshots. Data
+          # seeded on the first (Home) launch persists in the app's
+          # Documents dir across the later relaunches on the same
+          # simulator/install, so Garden and Settings show it too
+          # without re-seeding.
+          capture_tab() {
+            local tab_index="$1"
+            local screenshot_name="$2"
+            local seed="$3"
+            local LOGFILE="$CM_BUILD_DIR/simulator-artifacts/app-console-${screenshot_name}.log"
 
-          # Poll the console log for the app's own readiness marker
-          # instead of guessing a fixed sleep.
-          waited=0
-          until grep -q "IOS_TEST_APP_LAUNCHED" "$LOGFILE" 2>/dev/null; do
-            sleep 1
-            waited=$((waited + 1))
-            if [ "$waited" -ge 45 ]; then
-              echo "Timed out waiting for IOS_TEST_APP_LAUNCHED after ${waited}s"
-              break
-            fi
-          done
+            SIMCTL_CHILD_IOS_TEST_AUTOMATION="1" \
+              SIMCTL_CHILD_IOS_TEST_INITIAL_TAB="$tab_index" \
+              SIMCTL_CHILD_IOS_TEST_SEED_DATA="$seed" \
+              xcrun simctl launch --console-pty "$DEVICE_ID" com.tendyourself.app \
+                > "$LOGFILE" 2>&1 &
+            local launch_pid=$!
 
-          xcrun simctl io "$DEVICE_ID" screenshot \
-            "$CM_BUILD_DIR/simulator-artifacts/tend-launch.png"
+            local waited=0
+            until grep -q "IOS_TEST_APP_LAUNCHED" "$LOGFILE" 2>/dev/null; do
+              sleep 1
+              waited=$((waited + 1))
+              if [ "$waited" -ge 45 ]; then
+                echo "Timed out waiting for IOS_TEST_APP_LAUNCHED after ${waited}s (tab $tab_index)"
+                break
+              fi
+            done
 
-          kill "$LAUNCH_PID" 2>/dev/null || true
-          echo "--- app console log ---"
-          cat "$LOGFILE" || true
+            # Let the tab-switch/render settle before capturing.
+            sleep 2
+
+            xcrun simctl io "$DEVICE_ID" screenshot \
+              "$CM_BUILD_DIR/simulator-artifacts/${screenshot_name}.png"
+
+            kill "$launch_pid" 2>/dev/null || true
+            xcrun simctl terminate "$DEVICE_ID" com.tendyourself.app 2>/dev/null || true
+            echo "--- app console log ($screenshot_name) ---"
+            cat "$LOGFILE" || true
+          }
+
+          capture_tab 0 tend-home 1
+          capture_tab 1 tend-garden 0
+          capture_tab 2 tend-settings 0
 
     artifacts:
       - $CM_BUILD_DIR/derived-data/Build/Products/Debug-iphonesimulator/Tend.app

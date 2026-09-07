@@ -24,7 +24,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Goal")
                 } footer: {
-                    Text("Changing your goal affects how today (and any past day, when recomputed) is evaluated. See docs/MVP_SCOPE.md.")
+                    Text("Changing your goal affects how today (and any past day, when recomputed) is evaluated.")
                 }
 
                 Section {
