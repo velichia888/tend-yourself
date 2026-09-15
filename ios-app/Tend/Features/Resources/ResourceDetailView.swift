@@ -45,7 +45,9 @@ struct ResourceDetailView: View {
         }
         .background(Theme.canvas.ignoresSafeArea())
         .navigationTitle(category.title)
-        .navigationBarTitleDisplayMode(.inline)
+        #if os(iOS)
+	.navigationBarTitleDisplayMode(.inline)
+	#endif
     }
 }
 

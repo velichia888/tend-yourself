@@ -1,5 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 struct ResourcesView: View {
     @EnvironmentObject private var supportPlanStore: SupportPlanStore
@@ -127,14 +131,22 @@ struct ResourcesView: View {
 
     private func callOrText988() {
         if let url = URL(string: "tel://988") {
-            UIApplication.shared.open(url)
+            #if canImport(UIKit)
+	UIApplication.shared.open(url)
+	#elseif canImport(AppKit)
+	NSWorkspace.shared.open(url)
+	#endif
         }
     }
 
     private func call(_ phoneNumber: String) {
         let digits = phoneNumber.filter(\.isNumber)
         if let url = URL(string: "tel://\(digits)") {
-            UIApplication.shared.open(url)
+            #if canImport(UIKit)
+	UIApplication.shared.open(url)
+	#elseif canImport(AppKit)
+	NSWorkspace.shared.open(url)
+	#endif
         }
     }
 }

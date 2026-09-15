@@ -29,7 +29,9 @@ struct TasksView: View {
                 .padding(Theme.Spacing.md)
             }
             .background(Theme.canvas.ignoresSafeArea())
-            .navigationBarHidden(true)
+            #if os(iOS)
+	.navigationBarHidden(true)
+	#endif
             .sheet(isPresented: $showingAddTask) {
                 AddTaskView().environmentObject(store)
             }

@@ -29,7 +29,9 @@ struct JournalView: View {
                 .padding(Theme.Spacing.md)
             }
             .background(Theme.canvas.ignoresSafeArea())
-            .navigationBarHidden(true)
+            #if os(iOS)
+	.navigationBarHidden(true)
+	#endif
             .onAppear(perform: loadTodayIfPresent)
         }
     }

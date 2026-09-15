@@ -98,7 +98,9 @@ struct WaterView: View {
 
             HStack(spacing: Theme.Spacing.sm) {
                 TextField("Custom ml", text: $customAmountText)
-                    .keyboardType(.numberPad)
+                    #if os(iOS)
+		.keyboardType(.numberPad)
+		#endif
                     .focused($customFieldFocused)
                     .padding(Theme.Spacing.sm)
                     .background(Theme.surface)

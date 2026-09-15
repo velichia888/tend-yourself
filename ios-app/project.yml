@@ -69,8 +69,20 @@ targets:
       # (CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
       # CODE_SIGNING_ALLOWED=NO), so no project-level Debug override is
       # needed for them to keep working.
-
-  TendTests:
+  TendMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: Tend
+    settings:
+      base:
+        PRODUCT_NAME: Tend
+        PRODUCT_BUNDLE_IDENTIFIER: com.tendyourself.app
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Tend/App/Info-macOS.plist
+        CODE_SIGN_ENTITLEMENTS: Tend/App/TendMac.entitlements  
+TendTests:
     type: bundle.unit-test
     platform: iOS
     sources:
@@ -106,5 +118,11 @@ schemes:
     build:
       targets:
         Tend: [archive]
+    archive:
+      config: Release
+  TendMac-Release:
+    build:
+      targets:
+        TendMac: [archive]
     archive:
       config: Release

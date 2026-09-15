@@ -26,7 +26,9 @@ struct YouView: View {
                         Text("Daily Goal")
                         Spacer()
                         TextField("ml", text: $goalText)
-                            .keyboardType(.numberPad)
+                            #if os(iOS)
+			.keyboardType(.numberPad)
+			#endif
                             .focused($goalFieldFocused)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)

@@ -77,7 +77,9 @@ struct MeditationPlayerView: View {
         .padding(Theme.Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.canvas.ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
+        #if os(iOS)
+	.navigationBarTitleDisplayMode(.inline)
+	#endif
         .onReceive(ticker) { _ in tick() }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background { pause() }

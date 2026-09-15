@@ -20,7 +20,9 @@ struct SupportPlanView: View {
         }
         .background(Theme.canvas.ignoresSafeArea())
         .navigationTitle("Support Plan")
-        .navigationBarTitleDisplayMode(.inline)
+        #if os(iOS)
+	.navigationBarTitleDisplayMode(.inline)
+	#endif
         .sheet(isPresented: $showingAddContact) {
             AddSupportContactView().environmentObject(store)
         }
@@ -92,7 +94,9 @@ private struct AddSupportContactView: View {
                 TextField("Name", text: $name)
                 TextField("Relationship (e.g. Mom, Friend, Therapist)", text: $relationship)
                 TextField("Phone number", text: $phoneNumber)
-                    .keyboardType(.phonePad)
+                    #if os(iOS)
+		.keyboardType(.phonePad)
+		#endif
 
                 if !store.plan.contacts.isEmpty {
                     Section("Existing contacts") {

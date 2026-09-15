@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 @main
 struct TendApp: App {
@@ -20,7 +22,8 @@ struct TendApp: App {
     @StateObject private var notificationCoordinator: NotificationCoordinator
 
     init() {
-        let appearance = UINavigationBarAppearance()
+	#if canImport(UIKit)        
+	let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(Theme.canvas)
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.ink)]
@@ -33,6 +36,7 @@ struct TendApp: App {
         tabAppearance.backgroundColor = UIColor(Theme.surface)
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+	#endif
 
         // Coordinator is built here (not as a plain default-init
         // @StateObject) since it needs references to the other stores

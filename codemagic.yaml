@@ -328,3 +328,59 @@ workflows:
         # to an App Store version submission without it. That's the only
         # thing this project actually needs from this publishing step.
         submit_to_testflight: false
+  macos-appstore:
+    name: Tend macOS App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: ios-app
+    integrations:
+      app_store_connect: myemptycloset-appstore
+
+    environment:
+      vars:
+        BUNDLE_ID: com.tendyourself.app
+      xcode: latest
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate --spec project.yml
+      - name: Locate App Store Connect key
+        script: |
+          echo "AUTH_KEY_PATH=${APP_STORE_CONNECT_PRIVATE_KEY#@file:}" >> $CM_ENV
+      - name: Archive macOS app
+        script: |
+          xcodebuild archive \
+            -project Tend.xcodeproj \
+            -scheme TendMac-Release \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -archivePath build/TendMac.xcarchive \
+            -allowProvisioningUpdates
+      - name: Export macOS app
+        script: |
+          cat > /tmp/ExportOptions.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>4357L599UW</string>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath build/TendMac.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -allowProvisioningUpdates
+    artifacts:
+      - build/export/*.pkg
+      - build/export/*.app
+      - build/TendMac.xcarchive
