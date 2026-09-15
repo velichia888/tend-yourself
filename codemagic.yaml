@@ -337,10 +337,13 @@ workflows:
       app_store_connect: myemptycloset-appstore
 
     environment:
+      groups:
+        - macos
       vars:
         BUNDLE_ID: com.tendyourself.app
       xcode: latest
-    scripts:
+
+    scripts:  
       - name: Install XcodeGen
         script: |
           brew install xcodegen
