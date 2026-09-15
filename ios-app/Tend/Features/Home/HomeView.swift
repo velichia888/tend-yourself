@@ -95,8 +95,15 @@ struct HomeView: View {
             #if os(iOS)
 	.navigationBarHidden(true)
 	#endif
-            .fullScreenCover(isPresented: $showingHardDayMode) {
-                HardDayModeView()
+            #if os(iOS)
+.fullScreenCover(isPresented: $showingHardDayMode) {
+    HardDayModeView()
+}
+#else
+.sheet(isPresented: $showingHardDayMode) {
+    HardDayModeView()
+}
+#endif
             }
         }
     }
