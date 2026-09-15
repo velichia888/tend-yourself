@@ -104,7 +104,6 @@ struct HomeView: View {
     HardDayModeView()
 }
 #endif
-            }
         }
     }
 
