@@ -351,6 +351,21 @@ workflows:
       - name: Locate App Store Connect key
         script: |
           echo "AUTH_KEY_PATH=${APP_STORE_CONNECT_PRIVATE_KEY#@file:}" >> $CM_ENV
+      - name: Set up keychain
+        script: |
+          keychain initialize
+      - name: Fetch Mac signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --platform MAC_OS \
+            --type MAC_APP_STORE \
+            --create
+      - name: Install signing certificates
+        script: |
+          keychain add-certificates
+      - name: Apply provisioning profiles
+        script: |
+          xcode-project use-profiles
       - name: Archive macOS app
         script: |
           xcodebuild archive \
