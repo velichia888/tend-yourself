@@ -392,12 +392,21 @@ workflows:
             <string>app-store-connect</string>
             <key>signingStyle</key>
             <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.tendyourself.app</key>
+              <string>Tend Yourself mac_app_store 1789508411</string>
+            </dict>
             <key>teamID</key>
             <string>4357L599UW</string>
           </dict>
           </plist>
           EOF
           xcodebuild -exportArchive \
+            -archivePath build/TendMac.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -allowProvisioningUpdates
             -archivePath build/TendMac.xcarchive \
             -exportPath build/export \
             -exportOptionsPlist /tmp/ExportOptions.plist \
