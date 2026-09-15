@@ -407,10 +407,6 @@ workflows:
             -exportPath build/export \
             -exportOptionsPlist /tmp/ExportOptions.plist \
             -allowProvisioningUpdates
-            -archivePath build/TendMac.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates
     artifacts:
       - build/export/*.pkg
       - build/export/*.app
