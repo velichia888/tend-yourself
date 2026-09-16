@@ -74,6 +74,8 @@ targets:
     platform: macOS
     sources:
       - path: Tend
+        excludes:
+          - App/Info.plist
     settings:
       base:
         PRODUCT_NAME: Tend
