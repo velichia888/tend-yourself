@@ -386,36 +386,12 @@ workflows:
             -destination "generic/platform=macOS" \
             -archivePath build/TendMac.xcarchive \
             -allowProvisioningUpdates
-      - name: Export macOS app
+      - name: Package macOS app
         script: |
-          cat > /tmp/ExportOptions.plist <<'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.tendyourself.app</key>
-              <string>Tend Yourself mac_app_store 1789508411</string>
-            </dict>
-            <key>signingCertificate</key>
-            <string>3rd Party Mac Developer Application</string>
-            <key>installerSigningCertificate</key>
-            <string>3rd Party Mac Developer Installer</string>
-            <key>teamID</key>
-            <string>4357L599UW</string>
-          </dict>
-          </plist>
-          EOF
-          xcodebuild -exportArchive \
-            -archivePath build/TendMac.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates
+          productbuild --component build/TendMac.xcarchive/Products/Applications/Tend.app /Applications build/Tend-unsigned.pkg
+          productsign --sign "3rd Party Mac Developer Installer: ONA VELIKA GOODMAN (4357L599UW)" build/Tend-unsigned.pkg build/Tend.pkg
+
     artifacts:
-      - build/export/*.pkg
+      - build/Tend.pkg
       - build/export/*.app
       - build/TendMac.xcarchive
