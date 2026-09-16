@@ -366,7 +366,7 @@ workflows:
       
       - name: Fetch Mac Installer Distribution certificate
         script: |
-          app-store-connect certificates list --type MAC_APP_DISTRIBUTION --save
+          app-store-connect certificates list --type MAC_INSTALLER_DISTRIBUTION --save
       - name: Install signing certificates
         script: |
           keychain add-certificates
