@@ -400,3 +400,36 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # On-demand, read-only signing probe using Tend Yourself's app-scoped macos secret.
+  # No Apple changes, no Tend Yourself release, no automatic publishing or triggers.
+  rainbow-macos-signing-probe:
+    name: Rainbow macOS - existing certificate/key match (read-only)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    integrations:
+      app_store_connect: myemptycloset-appstore
+    environment:
+      groups:
+        - macos
+      xcode: latest
+      node: lts
+    scripts:
+      - name: Guard isolated signing probe branch
+        script: |
+          if [ "${CM_BRANCH:-}" != "chore/rainbow-macos-signing-probe-20261014" ]; then
+            echo "Select the Rainbow signing probe branch in the Tend Yourself Codemagic app." >&2
+            exit 1
+          fi
+
+      - name: Validate read-only probe script
+        script: |
+          bash -n ci/rainbow-macos-signing-probe.sh
+          node --test tests/rainbow-macos-signing-probe.test.cjs
+
+      - name: Check Apple certificate/private-key matching
+        script: |
+          bash ci/rainbow-macos-signing-probe.sh
+
+    artifacts:
+      - build/rainbow-macos-signing-probe/result.txt
