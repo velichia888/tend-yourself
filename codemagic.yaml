@@ -433,3 +433,100 @@ workflows:
 
     artifacts:
       - build/rainbow-macos-signing-probe/result.txt
+
+  # Manual-only Rainbow Mac build in Tend's signing environment.
+  # No Apple certificate/profile creation, revocation, or app publishing.
+  rainbow-macos-signed-candidate:
+    name: Rainbow macOS - signed candidate via Tend certificates
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: myemptycloset-appstore
+    environment:
+      groups:
+        - macos
+      xcode: latest
+      node: lts
+      vars:
+        RAINBOW_BUNDLE_ID: "com.rainbowofserenity.companion"
+        RAINBOW_SOURCE_COMMIT: "1b024e071e77987555a9b7d0aec6302ceeb21b4b"
+    scripts:
+      - name: Guard Tend signing bridge branch and existing credentials
+        script: |
+          if [ "$CM_BRANCH" != "feat/rainbow-macos-signed-candidate-20261014" ]; then
+            echo "Wrong branch. Select Rainbow signed candidate in Tend Yourself." >&2
+            exit 1
+          fi
+          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "Tend's existing macos signing key is unavailable." >&2
+            exit 1
+          fi
+          if [ "$RAINBOW_BUNDLE_ID" != "com.rainbowofserenity.companion" ]; then
+            echo "Unexpected Rainbow bundle ID." >&2
+            exit 1
+          fi
+
+      - name: Test isolated signing bridge
+        script: |
+          node --test tests/rainbow-macos-signing-probe.test.cjs tests/rainbow-macos-signed-candidate.test.cjs
+
+      - name: Checkout reviewed Rainbow commit
+        script: |
+          git clone --no-checkout https://github.com/velichia888/rainbow-of-serenity-slaa.git "$CM_BUILD_DIR/rainbow-source"
+          git -C "$CM_BUILD_DIR/rainbow-source" checkout --detach "$RAINBOW_SOURCE_COMMIT"
+          ACTUAL="$(git -C "$CM_BUILD_DIR/rainbow-source" rev-parse HEAD)"
+          if [ "$ACTUAL" != "$RAINBOW_SOURCE_COMMIT" ]; then
+            echo "Pinned Rainbow commit verification failed." >&2
+            exit 1
+          fi
+          test -f "$CM_BUILD_DIR/rainbow-source/macos/store/project.yml"
+
+      - name: Qualify Rainbow source and generate Xcode project
+        script: |
+          cd "$CM_BUILD_DIR/rainbow-source"
+          node --test tests/macos-desktop.test.cjs tests/macos-store.test.cjs tests/recovery-home.test.cjs tests/ios-icon.test.cjs
+          env -u CERTIFICATE_PRIVATE_KEY -u APP_STORE_CONNECT_PRIVATE_KEY bash macos/store/scripts/prepare.sh
+
+      - name: Initialize signing keychain
+        script: |
+          keychain initialize
+
+      - name: Fetch existing Rainbow Mac App Store certificate and provisioning profile
+        script: |
+          if ! app-store-connect fetch-signing-files "$RAINBOW_BUNDLE_ID" \
+              --platform MAC_OS \
+              --type MAC_APP_STORE \
+              --strict-match-identifier; then
+            echo "No existing exact-match Rainbow Mac App Store profile or signing pair found." >&2
+            echo "Check Apple Developer Profiles for Rainbow's Mac App Store profile. No certificate or profile was created." >&2
+            exit 1
+          fi
+
+      - name: Fetch existing Mac Installer Distribution identity
+        script: |
+          app-store-connect certificates list --type MAC_INSTALLER_DISTRIBUTION --save
+
+      - name: Import existing signing certificates
+        script: |
+          keychain add-certificates
+
+      - name: Apply Rainbow app-specific provisioning
+        script: |
+          cd "$CM_BUILD_DIR/rainbow-source/macos/store"
+          xcode-project use-profiles
+
+      - name: Archive and package signed Rainbow candidate
+        script: |
+          cd "$CM_BUILD_DIR/rainbow-source"
+          env -u CERTIFICATE_PRIVATE_KEY -u APP_STORE_CONNECT_PRIVATE_KEY bash macos/store/scripts/build-and-package.sh
+          DEST="$CM_BUILD_DIR/build/rainbow-signed-candidate"
+          mkdir -p "$DEST"
+          cp build/macos-store/RainbowOfSerenity-macOS-AppStore-candidate.pkg "$DEST/"
+          cp build/macos-store/signed-entitlements.plist "$DEST/"
+          test -s "$DEST/RainbowOfSerenity-macOS-AppStore-candidate.pkg"
+          echo "Signed Rainbow candidate ready for manual inspection; not uploaded to Apple."
+
+    artifacts:
+      - build/rainbow-signed-candidate/RainbowOfSerenity-macOS-AppStore-candidate.pkg
+      - build/rainbow-signed-candidate/signed-entitlements.plist
+      - /tmp/xcodebuild_logs/*.log
